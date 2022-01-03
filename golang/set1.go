@@ -153,6 +153,44 @@ func TestFixedXor() {
 
 // Challenge 3: Single-byte XOR cipher
 
+func EvaluateWordScore(msg string) float64 {
+	scores := map[rune]float64{
+		'a': 8.167,
+		'b': 1.492,
+		'c': 2.782,
+		'd': 4.253,
+		'e': 12.702,
+		'f': 2.228,
+		'g': 2.015,
+		'h': 6.094,
+		'i': 6.966,
+		'j': 0.153,
+		'k': 0.772,
+		'l': 4.025,
+		'm': 2.406,
+		'n': 6.749,
+		'o': 7.507,
+		'p': 1.929,
+		'q': 0.095,
+		'r': 5.987,
+		's': 6.327,
+		't': 9.056,
+		'u': 2.758,
+		'v': 0.978,
+		'w': 2.360,
+		'x': 0.150,
+		'y': 1.974,
+		'z': 0.074,
+	}
+	result := 0.0
+	for _, r := range msg {
+		if score, ok := scores[r]; ok {
+			result += score
+		}
+	}
+	return result
+}
+
 func SingbleByteXor(msg []byte, key byte) []byte {
 	result := make([]byte, len(msg))
 	for i := 0; i < len(msg); i++ {
@@ -161,34 +199,38 @@ func SingbleByteXor(msg []byte, key byte) []byte {
 	return result
 }
 
-func SingleByteXorCipher(cipher string) (string, error) {
+func SingleByteXorCipher(cipher string) (string, float64, error) {
 	cipherBytes, err := HexToBytes(cipher)
 	if err != nil {
-		return "", err
+		return "", 0.0, err
 	}
-	alphaCounter := 0
+	highestScore := 0.0
 	answer := make([]byte, len(cipherBytes))
 	for i := 0; i < 256; i++ {
 		plainBytes := SingbleByteXor(cipherBytes, byte(i))
 		plain := string(plainBytes)
-		tmpCounter := 0
+		abnormal := false
 		for _, c := range plain {
-			if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {
-				tmpCounter++
+			if c < ' ' || c > '~' {
+				abnormal = true
+				break
 			}
 		}
-		if tmpCounter > alphaCounter {
-			alphaCounter = tmpCounter
+		if abnormal {
+			continue
+		}
+		if score := EvaluateWordScore(plain); score > highestScore {
+			highestScore = score
 			copy(answer, plainBytes)
 		}
 	}
-	return string(answer), nil
+	return string(answer), highestScore, nil
 }
 
 func TestSingleByteXorCipher() {
 	println("======== Testing Challenge 3: Single-byte XOR cipher ========")
 	cipher := "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
-	msg, err := SingleByteXorCipher(cipher)
+	msg, _, err := SingleByteXorCipher(cipher)
 	if err != nil {
 		println("Oops. Failed.")
 	} else {
@@ -212,22 +254,15 @@ func DetectSingleCharacterXor() (string, error) {
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	var answer string
-	alphaCounter := 0
+	highestScore := 0.0
 	for scanner.Scan() {
 		line := scanner.Text()
-		result, err := SingleByteXorCipher(line)
+		result, score, err := SingleByteXorCipher(line)
 		if err != nil {
 			return "", err
 		}
-		tmpCounter := 0
-		for _, c := range result {
-			if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {
-				tmpCounter++
-			}
-		}
-		if tmpCounter > alphaCounter {
+		if score > highestScore {
 			answer = result
-			alphaCounter = tmpCounter
 		}
 	}
 	if err := scanner.Err(); err != nil {

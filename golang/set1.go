@@ -153,8 +153,8 @@ func TestFixedXor() {
 
 // Challenge 3: Single-byte XOR cipher
 
-func EvaluateWordScore(msg string) float64 {
-	scores := map[rune]float64{
+func EvaluateWordScore(msg []byte) float64 {
+	scores := map[byte]float64{
 		'a': 8.167,
 		'b': 1.492,
 		'c': 2.782,
@@ -199,19 +199,14 @@ func SingbleByteXor(msg []byte, key byte) []byte {
 	return result
 }
 
-func SingleByteXorCipher(cipher string) (string, float64, error) {
-	cipherBytes, err := HexToBytes(cipher)
-	if err != nil {
-		return "", 0.0, err
-	}
+func SingleByteXorCipher(cipherBytes []byte) ([]byte, float64, error) {
 	highestScore := 0.0
-	answer := make([]byte, len(cipherBytes))
+	var answer *[]byte
 	for i := 0; i < 256; i++ {
 		plainBytes := SingbleByteXor(cipherBytes, byte(i))
-		plain := string(plainBytes)
 		abnormal := false
-		for _, c := range plain {
-			if c < ' ' || c > '~' {
+		for _, c := range plainBytes {
+			if c < '\n' || c > '~' {
 				abnormal = true
 				break
 			}
@@ -219,24 +214,29 @@ func SingleByteXorCipher(cipher string) (string, float64, error) {
 		if abnormal {
 			continue
 		}
-		if score := EvaluateWordScore(plain); score > highestScore {
+		score := EvaluateWordScore(plainBytes)
+		if score > highestScore {
 			highestScore = score
-			copy(answer, plainBytes)
+			answer = &plainBytes
 		}
 	}
-	return string(answer), highestScore, nil
+	if answer == nil {
+		return make([]byte, 0), 0.0, nil
+	}
+	return *answer, highestScore, nil
 }
 
 func TestSingleByteXorCipher() {
 	println("======== Testing Challenge 3: Single-byte XOR cipher ========")
 	cipher := "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
-	msg, _, err := SingleByteXorCipher(cipher)
+	cipherBytes, _ := HexToBytes(cipher)
+	msg, _, err := SingleByteXorCipher(cipherBytes)
 	if err != nil {
 		println("Oops. Failed.")
 	} else {
 		println("answer:", "Cooking MC's like a pound of bacon")
-		println("yours :", msg)
-		if msg != "Cooking MC's like a pound of bacon" {
+		println("yours :", string(msg))
+		if string(msg) != "Cooking MC's like a pound of bacon" {
 			println("Oops. Failed.")
 		} else {
 			println("Congratulations! Passed.")
@@ -245,41 +245,43 @@ func TestSingleByteXorCipher() {
 }
 
 // Challenge 4: Detect single-character XOR
-func DetectSingleCharacterXor() (string, error) {
+func DetectSingleCharacterXor() ([]byte, error) {
 	filename := "4.txt"
 	file, err := os.Open(filename)
 	if err != nil {
-		return "", err
+		return make([]byte, 0), err
 	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
-	var answer string
+	var answer *[]byte
 	highestScore := 0.0
 	for scanner.Scan() {
 		line := scanner.Text()
-		result, score, err := SingleByteXorCipher(line)
+		cipherBytes, _ := HexToBytes(line)
+		result, score, err := SingleByteXorCipher(cipherBytes)
 		if err != nil {
-			return "", err
+			return make([]byte, 0), err
 		}
 		if score > highestScore {
-			answer = result
+			highestScore = score
+			answer = &result
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		return "", err
+		return make([]byte, 0), err
 	}
-	return answer, nil
+	return *answer, nil
 }
 
 func TestDetectSingleCharacterXor() {
 	println("======== Testing Challenge 4: Detect single-character XOR ========")
 	ans, err := DetectSingleCharacterXor()
 	if err != nil {
-		println("Oops. Failed.")
+		fmt.Printf("Oops. Failed. %v\n", err)
 	} else {
 		println("answer:", "Now that the party is jumping\n")
-		println("yours :", ans)
-		if ans != "Now that the party is jumping\n" {
+		println("yours :", string(ans))
+		if string(ans) != "Now that the party is jumping\n" {
 			println("Oops. Failed.")
 		} else {
 			println("Congratulations! Passed.")
@@ -315,4 +317,37 @@ func TestRepeatingKeyXor() {
 			println("Congratulations! Passed.")
 		}
 	}
+}
+
+// Challenge 6: Break repeating-key XOR
+
+func HammingDistanceOf(a, b []byte) int {
+	if len(a) > len(b) {
+		a, b = b, a
+	}
+	var result int
+	for i := 0; i < len(a); i++ {
+		if a[i] != b[i] {
+			result++
+		}
+	}
+	return result
+}
+
+func BreakRepeatingKeyXor(cipher []byte) ([]byte, []byte, error) {
+	// maxKeySize := 40
+	// minKeySize := 2
+	return make([]byte, 0), make([]byte, 0), nil
+}
+
+func TestBreakRepeatingKeyXor() {
+	fmt.Println("======== Testing Challenge 6: Break repeating-key XOR ========")
+	hammingAnswer := 37
+	yoursHamming := HammingDistanceOf([]byte("this is a test"), []byte("wokka wokka!!!"))
+	if yoursHamming != hammingAnswer {
+		fmt.Printf("Oops. Failed. Hamming distance is %d, not %d.\n", yoursHamming, hammingAnswer)
+	} else {
+		fmt.Println("Hamming distance is correct.")
+	}
+
 }

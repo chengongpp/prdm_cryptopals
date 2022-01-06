@@ -15,4 +15,5 @@ SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t
 请直接下手实现这个功能。在接下来的练习中你将会用到它。
 
 > CryptoPals规则
+> 
 > 请保证你直接对原始字节进行操作，不要搞编码过的字符串。Hex和Base64只用于美观输出。

@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 )
 
@@ -334,10 +335,56 @@ func HammingDistanceOf(a, b []byte) int {
 	return result
 }
 
+func DetectKeySize(cipherBytes []byte) (int, error) {
+	minDistance := math.MaxInt32
+	var answer int
+	for keySize := 2; keySize <= 40; keySize++ {
+		// TODO: allow for not aligned keySize
+		if len(cipherBytes)%keySize != 0 {
+			continue
+		}
+		var distance int
+		// for i := 0; i < keySize; i++ {
+		// 	distance += HammingDistanceOf(cipherBytes[i*2:i*2+2], cipherBytes[i*2+keySize:i*2+keySize+2])
+		// }
+		distance = HammingDistanceOf(cipherBytes[0:keySize], cipherBytes[keySize:keySize*2])
+		if distance < minDistance {
+			minDistance = distance
+			answer = keySize
+		}
+	}
+	return answer, nil
+}
+
+func TransPoseBlocks(cipherBytes []byte, keySize int) [][]byte {
+	var blocks [][]byte
+	for i := 0; i < keySize; i++ {
+		blocks = append(blocks, cipherBytes[i*keySize:(i+1)*keySize])
+	}
+	var result [][]byte
+	for i := 0; i < keySize; i++ {
+		var row []byte
+		for j := 0; j < keySize; j++ {
+			row = append(row, blocks[j][i])
+		}
+		result = append(result, row)
+	}
+	return result
+}
+
 func BreakRepeatingKeyXor(cipher []byte) ([]byte, []byte, error) {
 	// maxKeySize := 40
 	// minKeySize := 2
-	return make([]byte, 0), make([]byte, 0), nil
+	keySize, err := DetectKeySize(cipher)
+	if err != nil {
+		return nil, nil, err
+	}
+	blocks := TransPoseBlocks(cipher, keySize)
+	result := make([][]byte, keySize)
+	for i := 0; i < keySize; i++ {
+		blocks[i] = blocks[i][:len(blocks[i])/2]
+	}
+
 }
 
 func TestBreakRepeatingKeyXor() {

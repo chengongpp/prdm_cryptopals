@@ -356,7 +356,7 @@ func DetectKeySize(cipherBytes []byte) (int, error) {
 	return answer, nil
 }
 
-func TransPoseBlocks(cipherBytes []byte, keySize int) [][]byte {
+func TransposeBlocks(cipherBytes []byte, keySize int) [][]byte {
 	var blocks [][]byte
 	for i := 0; i < keySize; i++ {
 		blocks = append(blocks, cipherBytes[i*keySize:(i+1)*keySize])
@@ -379,7 +379,7 @@ func BreakRepeatingKeyXor(cipher []byte) ([]byte, []byte, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	blocks := TransPoseBlocks(cipher, keySize)
+	blocks := TransposeBlocks(cipher, keySize)
 	result := make([][]byte, keySize)
 	for i := 0; i < keySize; i++ {
 		blocks[i] = blocks[i][:len(blocks[i])/2]

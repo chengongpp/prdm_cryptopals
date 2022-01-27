@@ -35,21 +35,21 @@ func HexToBase64(hex string) (string, error) {
 	for i := 0; i < len(hex); i += 2 {
 		hi := hex[i]
 		if hi >= '0' && hi <= '9' {
-			oneByte = uint8(hi-'0') << 4
+			oneByte = (hi - '0') << 4
 		} else if hi >= 'a' && hi <= 'f' {
-			oneByte = uint8(hi-'a'+10) << 4
+			oneByte = (hi - 'a' + 10) << 4
 		} else if hi >= 'A' && hi <= 'F' {
-			oneByte = uint8(hi-'A'+10) << 4
+			oneByte = (hi - 'A' + 10) << 4
 		} else {
 			return "", errors.New("invalid hex string")
 		}
 		lo := hex[i+1]
 		if lo >= '0' && lo <= '9' {
-			oneByte |= uint8(lo - '0')
+			oneByte |= lo - '0'
 		} else if lo >= 'a' && lo <= 'f' {
-			oneByte |= uint8(lo - 'a' + 10)
+			oneByte |= lo - 'a' + 10
 		} else if lo >= 'A' && lo <= 'F' {
-			oneByte |= uint8(lo - 'A' + 10)
+			oneByte |= lo - 'A' + 10
 		} else {
 			return "", errors.New("invalid hex string")
 		}
@@ -80,10 +80,10 @@ func TestHexToBase64() {
 	hexInput := "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
 	answer := "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t"
 	println("======== Testing Challenge 1: Hex to Base64 ========")
-	base64, _ := HexToBase64(hexInput)
+	b64, _ := HexToBase64(hexInput)
 	println("answer: ", answer)
-	println("yours : ", base64)
-	if base64 != answer {
+	println("yours : ", b64)
+	if b64 != answer {
 		println("Oops. Failed.")
 	} else {
 		println("Congratulations! Passed.")
@@ -99,21 +99,21 @@ func HexToBytes(hex string) ([]byte, error) {
 	for i := 0; i < len(hex); i += 2 {
 		hi := hex[i]
 		if hi >= '0' && hi <= '9' {
-			oneByte = uint8(hi-'0') << 4
+			oneByte = (hi - '0') << 4
 		} else if hi >= 'a' && hi <= 'f' {
-			oneByte = uint8(hi-'a'+10) << 4
+			oneByte = (hi - 'a' + 10) << 4
 		} else if hi >= 'A' && hi <= 'F' {
-			oneByte = uint8(hi-'A'+10) << 4
+			oneByte = (hi - 'A' + 10) << 4
 		} else {
 			return make([]byte, 0), errors.New("invalid hex string")
 		}
 		lo := hex[i+1]
 		if lo >= '0' && lo <= '9' {
-			oneByte |= uint8(lo - '0')
+			oneByte |= lo - '0'
 		} else if lo >= 'a' && lo <= 'f' {
-			oneByte |= uint8(lo - 'a' + 10)
+			oneByte |= lo - 'a' + 10
 		} else if lo >= 'A' && lo <= 'F' {
-			oneByte |= uint8(lo - 'A' + 10)
+			oneByte |= lo - 'A' + 10
 		} else {
 			return make([]byte, 0), errors.New("invalid hex string")
 		}
@@ -283,13 +283,16 @@ func TestSingleByteXorCipher() {
 }
 
 // Challenge 4: Detect single-character XOR
+
 func DetectSingleCharacterXor() ([]byte, error) {
 	filename := "4.txt"
 	file, err := os.Open(filename)
 	if err != nil {
 		return make([]byte, 0), err
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 	scanner := bufio.NewScanner(file)
 	var answer *[]byte
 	highestScore := 0.0
@@ -328,6 +331,7 @@ func TestDetectSingleCharacterXor() {
 }
 
 // Challenge 5: Implement repeating-key XOR
+
 func RepeatingKeyXor(msg []byte, key []byte) ([]byte, error) {
 	result := make([]byte, len(msg))
 	for i := 0; i < len(msg); i++ {

@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"crypto/aes"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -14,12 +15,13 @@ import (
 )
 
 func main() {
-	TestHexToBase64()
-	TestFixedXor()
-	TestSingleByteXorCipher()
-	TestDetectSingleCharacterXor()
-	TestRepeatingKeyXor()
-	TestBreakRepeatingKeyXor()
+	//TestHexToBase64()
+	//TestFixedXor()
+	//TestSingleByteXorCipher()
+	//TestDetectSingleCharacterXor()
+	//TestRepeatingKeyXor()
+	//TestBreakRepeatingKeyXor()
+	TestAesEncrypt()
 }
 
 // Challenge 1: Hex to Base64
@@ -502,4 +504,65 @@ func TestBreakRepeatingKeyXor() {
 	} else {
 		fmt.Println("Oops. Failed.")
 	}
+}
+
+// Challenge 7: AES in ECB mode
+
+type CipherBlock interface {
+	BlockSize() int
+	EncryptEcb(dst []byte, src []byte)
+	DecryptEcb(dst []byte, src []byte)
+}
+
+const AesBlockSize = 16
+
+func NewAesCipher(k []byte) (CipherBlock, error) {
+	return nil, nil
+}
+
+func AesEncrypt() {
+
+}
+
+func AesDecrypt() {
+
+}
+
+func TestAesEncrypt() {
+	aesCipherBlock, err := aes.NewCipher([]byte("YELLOW SUBMARINE"))
+	if err != nil {
+		fmt.Printf("Oops. Failed. %v\n", err)
+		os.Exit(1)
+	}
+	file, err := os.Open("golang/7.txt")
+	if err != nil {
+		fmt.Printf("Failed to open file!")
+		os.Exit(1)
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Printf("Failed to close file!")
+			os.Exit(1)
+		}
+	}(file)
+	scanner := bufio.NewScanner(file)
+	lines := make([]string, 512)
+	idx := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		lines[idx] = line
+		idx += 1
+	}
+	b64Content := strings.Join(lines, "")
+	cipher, err := base64.StdEncoding.DecodeString(b64Content)
+	if err != nil {
+		fmt.Printf("Fail to parse file!")
+		os.Exit(1)
+	}
+	message := make([]byte, 32768)
+	for i := 0; i < len(cipher); i += 16 {
+		aesCipherBlock.Decrypt(message[i:], cipher[i:])
+	}
+	fmt.Println(string(message))
 }
